@@ -1,3 +1,7 @@
+---
+sidebar_position: 5
+---
+
 # Libuv & Async IO
 
 Libuv is a multi-platform C library that provides Node.js with an event-driven, asynchronous I/O model. It powers Node.js's non-blocking architecture, enabling high concurrency with a single-threaded event loop.
@@ -26,7 +30,7 @@ The event loop is the core of Node.js's async model. It processes events and exe
 - **Check**: Executes setImmediate callbacks
 - **Close Callbacks**: Executes close event callbacks
 
-## Example: Asynchronous File Read
+### Example: Asynchronous File Read
 
 ```js
 const fs = require("fs");
@@ -37,7 +41,7 @@ fs.readFile("example.txt", "utf8", (err, data) => {
 });
 ```
 
-- The above code uses libuv under the hood to perform non-blocking file I/O.
+The above code uses libuv under the hood to perform non-blocking file I/O.
 
 ## Thread Pool
 
