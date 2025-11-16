@@ -1,50 +1,51 @@
 import clsx from 'clsx';
 import Heading from '@theme/Heading';
+import Link from '@docusaurus/Link';
 import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
-    description: (
-      <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
-      </>
-    ),
+    title: 'Node.js',
+    icon: 'Node',
+    color: '#68a063',
+    description: 'Complete guide to Node.js fundamentals, Express.js, routing, middleware, and database integration with MongoDB.',
+    link: '/docs/nodejs/introduction',
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
-    description: (
-      <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
-      </>
-    ),
+    title: '.NET',
+    icon: '.NET',
+    color: '#512bd4',
+    description: 'Explore .NET patterns including middleware, options pattern, authentication, and global error handling.',
+    link: '/docs/dotnet/middleware',
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
-    description: (
-      <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
-      </>
-    ),
+    title: 'Database',
+    icon: 'DB',
+    color: '#4db33d',
+    description: 'Learn MongoDB schemas, models, indexing strategies, and compound indexes for optimal query performance.',
+    link: '/docs/nodejs/database/create-database-mongodb',
+  },
+  {
+    title: 'Authentication',
+    icon: 'Auth',
+    color: '#f59e0b',
+    description: 'Implement secure authentication with JWT tokens, permission-based authorization, and best practices.',
+    link: '/docs/dotnet/authentication/jwt-token',
   },
 ];
 
-function Feature({Svg, title, description}) {
+function Feature({icon, title, description, link, color}) {
   return (
-    <div className={clsx('col col--4')}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
-      </div>
-      <div className="text--center padding-horiz--md">
-        <Heading as="h3">{title}</Heading>
-        <p>{description}</p>
-      </div>
+    <div className={clsx('col col--6')}>
+      <Link to={link} className={styles.featureCard}>
+        <div className={styles.featureIcon} style={{backgroundColor: color}}>
+          {icon}
+        </div>
+        <div className={styles.featureContent}>
+          <Heading as="h3">{title}</Heading>
+          <p>{description}</p>
+        </div>
+      </Link>
     </div>
   );
 }
@@ -53,7 +54,13 @@ export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
       <div className="container">
-        <div className="row">
+        <div className="text--center margin-bottom--xl">
+          <Heading as="h2">Technical Documentation</Heading>
+          <p className={styles.featuresSubtitle}>
+            Comprehensive guides and notes on modern web development technologies
+          </p>
+        </div>
+        <div className="row" style={{rowGap: '1.5rem'}}>
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />
           ))}
