@@ -14,15 +14,20 @@ Scalability is the ability of a system to handle more load by adding resources. 
 
 Adding more resources (CPU, RAM, storage) to a single server.
 
-### Visual Representation
+```mermaid
+graph LR
+    subgraph "BEFORE"
+    A[Server<br/>4 CPU<br/>8 GB RAM]
+    end
 
-```
-BEFORE:              AFTER:
-┌─────────┐         ┌─────────┐
-│ Server  │   -->   │ Server  │
-│ 4 CPU   │         │ 16 CPU  │
-│ 8 GB    │         │ 64 GB   │
-└─────────┘         └─────────┘
+    subgraph "AFTER"
+    B[Server<br/>16 CPU<br/>64 GB RAM]
+    end
+
+    A -->|Upgrade| B
+
+    style A fill:#FFE6E6
+    style B fill:#E6FFE6
 ```
 
 ### Key Characteristics
@@ -53,21 +58,30 @@ BEFORE:              AFTER:
 
 Adding more servers to distribute the load across multiple machines.
 
-### Visual Representation
+```mermaid
+graph TD
+    subgraph "BEFORE"
+    S1[Server<br/>4 CPU, 8 GB]
+    end
 
-```
-BEFORE:                    AFTER:
+    subgraph "AFTER"
+    LB[Load Balancer]
+    S2[Server 1<br/>4 CPU, 8 GB]
+    S3[Server 2<br/>4 CPU, 8 GB]
+    S4[Server 3<br/>4 CPU, 8 GB]
 
-┌─────────┐              ┌──────────────┐
-│ Server  │              │Load Balancer │
-│ 4 CPU   │              └──────┬───────┘
-│ 8 GB    │       -->           │
-└─────────┘           ┌─────────┼─────────┐
-                      │         │         │
-                  ┌───▼───┐ ┌───▼───┐ ┌───▼───┐
-                  │Server1│ │Server2│ │Server3│
-                  │4c/8GB │ │4c/8GB │ │4c/8GB │
-                  └───────┘ └───────┘ └───────┘
+    LB --> S2
+    LB --> S3
+    LB --> S4
+    end
+
+    S1 -->|Scale Out| LB
+
+    style S1 fill:#FFE6E6
+    style LB fill:#87CEEB
+    style S2 fill:#E6FFE6
+    style S3 fill:#E6FFE6
+    style S4 fill:#E6FFE6
 ```
 
 ### Key Characteristics
@@ -139,23 +153,28 @@ BEFORE:                    AFTER:
 
 Most modern systems combine both approaches:
 
-```
-        ┌──────────────┐
-        │Load Balancer │
-        └──────┬───────┘
-               │
-      ┌────────┼────────┐
-      │        │        │
-  ┌───▼───┐┌───▼───┐┌───▼───┐
-  │Server1││Server2││Server3│
-  │16c/64G││16c/64G││16c/64G│
-  └───────┘└───────┘└───────┘
+```mermaid
+graph TD
+    Client[Clients] --> LB[Load Balancer]
 
-  Horizontal: Multiple servers
-  Vertical: Each server is powerful
+    subgraph "Horizontal Scaling: Multiple Servers"
+    LB --> S1[Server 1<br/>16 CPU, 64 GB]
+    LB --> S2[Server 2<br/>16 CPU, 64 GB]
+    LB --> S3[Server 3<br/>16 CPU, 64 GB]
+    end
+
+    Note[Each server is powerful<br/>Vertical Scaling]
+
+    style Client fill:#E6F3FF
+    style LB fill:#87CEEB
+    style S1 fill:#90EE90
+    style S2 fill:#90EE90
+    style S3 fill:#90EE90
+    style Note fill:#FFF4E6
 ```
 
 **Strategy:**
+
 1. Start with vertical scaling (simpler)
 2. Add horizontal scaling as you grow
 3. Balance cost, complexity, and performance

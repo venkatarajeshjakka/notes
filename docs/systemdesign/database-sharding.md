@@ -8,131 +8,206 @@ sidebar_position: 7
 
 Database sharding is a technique of splitting a large database into smaller, more manageable pieces called shards. Each shard is an independent database that contains a subset of the total data.
 
+```mermaid
+graph TD
+    subgraph "Before Sharding"
+    BigDB[(Large Database<br/>100M records)]
+    end
+
+    subgraph "After Sharding"
+    S1[(Shard 1<br/>33M records)]
+    S2[(Shard 2<br/>33M records)]
+    S3[(Shard 3<br/>34M records)]
+    end
+
+    BigDB -.Split.-> S1
+    BigDB -.Split.-> S2
+    BigDB -.Split.-> S3
+
+    style BigDB fill:#FFB6C1
+    style S1 fill:#90EE90
+    style S2 fill:#90EE90
+    style S3 fill:#90EE90
+```
+
+**Benefits:**
+
+- Improved performance (smaller datasets = faster queries)
+- Horizontal scalability (add more shards as data grows)
+- High availability (one shard down doesn't affect others)
+- Reduced cost (use commodity hardware)
+
 ---
 
 ## Horizontal Partitioning (Sharding)
 
 Splitting database rows across multiple servers. Each server contains same schema but different rows.
 
-### How It Works
+```mermaid
+graph TD
+    App[Application] --> Router[Shard Router]
 
-```
-Users Table (10M records)
-         ┌────────────┐
-         │ Split by   │
-         │  User ID   │
-         └─────┬──────┘
-               │
-    ┌──────────┼──────────┐
-    │          │          │
-┌───▼───┐  ┌───▼───┐  ┌───▼───┐
-│Shard 1│  │Shard 2│  │Shard 3│
-│ID:1-3M│  │ID:3-6M│  │ID:6-10M│
-└───────┘  └───────┘  └───────┘
+    Router -->|Users 1-3M| S1[(Shard 1)]
+    Router -->|Users 3-6M| S2[(Shard 2)]
+    Router -->|Users 6-10M| S3[(Shard 3)]
+
+    style Router fill:#87CEEB
+    style S1 fill:#90EE90
+    style S2 fill:#E6FFE6
+    style S3 fill:#FFF4E6
 ```
 
-### Sharding Strategies
+---
 
-**1. Range-Based Sharding**
+## Sharding Strategies
+
+### 1. Range-Based Sharding
 
 Divide data by ranges of a key.
 
 **Example:** User IDs 1-1M → Shard 1, 1M-2M → Shard 2
 
-**Pros:** Simple, easy to implement
-**Cons:** Uneven distribution, hotspots
+**Pros:**
 
-**2. Hash-Based Sharding**
+- Simple to implement
+- Easy to add new shards
+- Good for range queries
+
+**Cons:**
+
+- Uneven distribution if data not uniformly distributed
+- Hotspots (newer users might all go to last shard)
+
+### 2. Hash-Based Sharding
 
 Use hash function to determine shard.
 
 **Formula:** `shard = hash(user_id) % number_of_shards`
 
-**Pros:** Even distribution
-**Cons:** Hard to add/remove shards (use consistent hashing)
+```mermaid
+sequenceDiagram
+    participant App
+    participant HashFunc
+    participant Shard
 
-**3. Geographic Sharding**
+    App->>HashFunc: hash(user_id: 12345)
+    HashFunc->>HashFunc: 12345 % 3 = 0
+    HashFunc->>Shard: Route to Shard 0
+
+    Note over App,Shard: Even distribution
+```
+
+**Pros:**
+
+- Even distribution across shards
+- No hotspots
+- Simple algorithm
+
+**Cons:**
+
+- Hard to add/remove shards (requires rehashing all data)
+- Use consistent hashing to mitigate
+
+### 3. Geographic Sharding
 
 Split by location.
 
 **Example:** US users → US shard, EU users → EU shard
 
-**Pros:** Low latency, data locality
-**Cons:** Uneven load if regions differ in size
+**Pros:**
 
-**4. Directory-Based Sharding**
+- Low latency (data near users)
+- Data locality/compliance (GDPR)
+- Natural partitioning
+
+**Cons:**
+
+- Uneven load if regions differ in size
+- Cross-region queries expensive
+
+### 4. Directory-Based Sharding
 
 Lookup table maps keys to shards.
 
-**Pros:** Flexible, easy to rebalance
-**Cons:** Lookup table becomes bottleneck
+**Pros:**
 
-### Benefits
+- Flexible routing logic
+- Easy to rebalance (just update directory)
+- Can combine strategies
 
-- **Improved Performance:** Smaller datasets = faster queries
-- **Horizontal Scalability:** Add more shards as data grows
-- **High Availability:** One shard down doesn't affect others
-- **Reduced Cost:** Use commodity hardware instead of expensive single server
+**Cons:**
 
-### Considerations
+- Directory lookup adds latency
+- Directory becomes single point of failure
+- Directory table can grow large
 
-#### 1. Consistency
+---
+
+## Challenges & Considerations
+
+### 1. Data Consistency
 
 **Challenge:** Distributed transactions across shards are complex.
 
+```mermaid
+sequenceDiagram
+    participant App
+    participant S1 as Shard 1
+    participant S2 as Shard 2
+
+    App->>S1: Transfer $100 from User A
+    S1-->>App: Success ✓
+    App->>S2: Add $100 to User B
+    S2--xApp: Fail ✗
+
+    Note over App,S2: Inconsistent state!
+```
+
 **Solutions:**
 
-- Avoid cross-shard transactions where possible
+- Avoid cross-shard transactions
 - Use eventual consistency
 - Implement 2-phase commit or Saga pattern
 
-**Example:** Transfer money between users on different shards requires careful coordination.
-
-#### 2. Availability
+### 2. Availability
 
 **Trade-off:** CAP theorem - can't have perfect consistency and availability during partition.
 
 **Approach:** Replicate each shard for high availability.
 
+```mermaid
+graph TD
+    S1P[Shard 1 Primary] -.Replicate.-> S1R[Shard 1 Replica]
+    S2P[Shard 2 Primary] -.Replicate.-> S2R[Shard 2 Replica]
+    S3P[Shard 3 Primary] -.Replicate.-> S3R[Shard 3 Replica]
+
+    style S1P fill:#90EE90
+    style S2P fill:#90EE90
+    style S3P fill:#90EE90
 ```
-┌───────┐     ┌───────┐     ┌───────┐
-│Shard 1│     │Shard 2│     │Shard 3│
-│Primary│     │Primary│     │Primary│
-└───┬───┘     └───┬───┘     └───┬───┘
-    │             │             │
-┌───▼───┐     ┌───▼───┐     ┌───▼───┐
-│Shard 1│     │Shard 2│     │Shard 3│
-│Replica│     │Replica│     │Replica│
-└───────┘     └───────┘     └───────┘
-```
 
-### Drawbacks
-
-**1. Increased Complexity**
-
-Managing multiple databases harder than one.
-
-**2. Cross-Shard Queries**
+### 3. Cross-Shard Queries
 
 Queries spanning multiple shards are slow and complex.
 
 **Example:** "Find all orders from all users" requires querying all shards and merging results.
 
-**3. Rebalancing**
+**Solutions:**
+
+- Denormalize data to avoid joins
+- Use caching for common queries
+- Pre-aggregate data
+- Accept eventual consistency
+
+### 4. Rebalancing
 
 Adding/removing shards requires data migration.
 
-**4. No Foreign Keys**
+**Challenges:**
 
-Foreign key constraints don't work across shards.
-
-**5. Application Changes**
-
-Application must be shard-aware for routing queries.
-
-**6. Joins Are Difficult**
-
-Joining tables across shards requires application-level logic.
+- Downtime during migration
+- Data transfer time
+- Maintaining consistency
 
 ---
 
@@ -140,20 +215,26 @@ Joining tables across shards requires application-level logic.
 
 Database replication pattern where one server (master) handles writes and multiple servers (slaves) handle reads.
 
-### Architecture
+```mermaid
+graph TD
+    App[Application]
 
-```
-         ┌────────┐
-         │ Master │ ◄─── Writes
-         └───┬────┘
-             │
-      Replication
-             │
-    ┌────────┼────────┐
-    │        │        │
-┌───▼───┐┌───▼───┐┌───▼───┐
-│Slave 1││Slave 2││Slave 3│ ◄─── Reads
-└───────┘└───────┘└───────┘
+    App -->|Writes| M[Master Database]
+    App -->|Reads| LB[Load Balancer]
+
+    M -.Replicate.-> S1[Slave 1]
+    M -.Replicate.-> S2[Slave 2]
+    M -.Replicate.-> S3[Slave 3]
+
+    LB --> S1
+    LB --> S2
+    LB --> S3
+
+    style M fill:#FFB6C1
+    style S1 fill:#90EE90
+    style S2 fill:#90EE90
+    style S3 fill:#90EE90
+    style LB fill:#87CEEB
 ```
 
 ### How It Works
