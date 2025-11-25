@@ -1,0 +1,8 @@
+{
+  "label": "REST API",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Learn about REST API architecture, HTTP methods, design principles, and best practices for building web APIs."
+  }
+}
